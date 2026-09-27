@@ -216,7 +216,7 @@ $result = $conn->query($sql);
 
 <section class="hero">
 
-    <h1>Find Trusted Local Services</h1>
+    <h1>Find Trusted Local Services near you</h1>
 
     <p>
         Find professionals near you and book their services easily.
