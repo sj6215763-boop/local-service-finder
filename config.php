@@ -1,17 +1,19 @@
 <?php
 
-$cfg['blowfish_secret'] = 'my-local-project-secret-2026';
+$host = "localhost";
+$username = "root";
+$password = "";
+$database = "local_service_provider";
 
-$i = 0;
-$i++;
+$conn = new mysqli(
+    $host,
+    $username,
+    $password,
+    $database
+);
 
-$cfg['Servers'][$i]['auth_type'] = 'config';
-$cfg['Servers'][$i]['user'] = 'root';
-$cfg['Servers'][$i]['password'] = '';
-$cfg['Servers'][$i]['extension'] = 'mysqli';
-$cfg['Servers'][$i]['AllowNoPassword'] = true;
-$cfg['Servers'][$i]['host'] = '127.0.0.1';
-$cfg['Servers'][$i]['port'] = '3307';
-$cfg['Servers'][$i]['connect_type'] = 'tcp';
+if ($conn->connect_error) {
+    die("Database connection failed: " . $conn->connect_error);
+}
 
-?>
+$conn->set_charset("utf8mb4");
