@@ -222,36 +222,37 @@ include "includes/header.php";
 
 <?php if ($booking["status"] === "pending"): ?>
 
-    <a
-        href="?id=<?= $booking["id"] ?>&status=accepted"
-        class="btn btn-success btn-sm"
-    >
-        Accept
-    </a>
-
-    <a
-        href="?id=<?= $booking["id"] ?>&status=rejected"
-        class="btn btn-danger btn-sm"
-    >
-        Reject
-    </a>
+    <span class="badge bg-warning text-dark">
+        Pending
+    </span>
 
 <?php elseif ($booking["status"] === "accepted"): ?>
 
-    <a
-        href="?id=<?= $booking["id"] ?>&status=completed"
-        class="btn btn-primary btn-sm"
-    >
-        Complete
-    </a>
+    <span class="badge bg-success">
+        Accepted
+    </span>
+
+<?php elseif ($booking["status"] === "rejected"): ?>
+
+    <span class="badge bg-danger">
+        Rejected
+    </span>
+
+<?php elseif ($booking["status"] === "completed"): ?>
+
+    <span class="badge bg-primary">
+        Completed
+    </span>
 
 <?php else: ?>
 
-    <span class="text-muted">
-        No action
+    <span class="badge bg-secondary">
+        <?= htmlspecialchars($booking["status"]) ?>
     </span>
 
 <?php endif; ?>
+
+</td>
 
 </td>
 
