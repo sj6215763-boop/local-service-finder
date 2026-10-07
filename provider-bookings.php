@@ -5,20 +5,30 @@ require_once "config/database.php";
 session_start();
 
 if (
+    !isset($_SESSION["user_id"]) ||
+    $_SESSION["role"] !== "provider"
+) {
+    header("Location: login.php");
+    exit;
+}
+
+/*
+ * Secure booking status management
+ *
+ * Allowed status transitions:
+ *
+ * pending  -> accepted
+ * pending  -> rejected
+ * accepted -> completed
+ */
+
+if (
     isset($_GET["id"]) &&
     isset($_GET["status"])
 ) {
 
     $bookingId = (int) $_GET["id"];
     $newStatus = $_GET["status"];
-
-    /*
-     * Only these status transitions are allowed:
-     *
-     * pending   -> accepted
-     * pending   -> rejected
-     * accepted  -> completed
-     */
 
     if ($newStatus === "accepted") {
 
@@ -39,7 +49,6 @@ if (
         );
 
         $stmt->execute();
-
         $stmt->close();
 
     } elseif ($newStatus === "rejected") {
@@ -61,7 +70,6 @@ if (
         );
 
         $stmt->execute();
-
         $stmt->close();
 
     } elseif ($newStatus === "completed") {
@@ -83,13 +91,17 @@ if (
         );
 
         $stmt->execute();
-
         $stmt->close();
     }
 
     header("Location: provider-bookings.php");
     exit;
 }
+
+
+/*
+ * Get bookings belonging to the logged-in provider
+ */
 
 $stmt = $conn->prepare("
     SELECT
@@ -171,37 +183,73 @@ include "includes/header.php";
 </td>
 
 <td>
-<span class="badge bg-secondary">
-<?= htmlspecialchars($booking["status"]) ?>
-</span>
+
+<?php if ($booking["status"] === "pending"): ?>
+
+    <span class="badge bg-warning text-dark">
+        Pending
+    </span>
+
+<?php elseif ($booking["status"] === "accepted"): ?>
+
+    <span class="badge bg-success">
+        Accepted
+    </span>
+
+<?php elseif ($booking["status"] === "rejected"): ?>
+
+    <span class="badge bg-danger">
+        Rejected
+    </span>
+
+<?php elseif ($booking["status"] === "completed"): ?>
+
+    <span class="badge bg-primary">
+        Completed
+    </span>
+
+<?php else: ?>
+
+    <span class="badge bg-secondary">
+        <?= htmlspecialchars($booking["status"]) ?>
+    </span>
+
+<?php endif; ?>
+
 </td>
 
 <td>
 
 <?php if ($booking["status"] === "pending"): ?>
 
-<a
-    href="?id=<?= $booking["id"] ?>&status=accepted"
-    class="btn btn-success btn-sm"
->
-    Accept
-</a>
+    <a
+        href="?id=<?= $booking["id"] ?>&status=accepted"
+        class="btn btn-success btn-sm"
+    >
+        Accept
+    </a>
 
-<a
-    href="?id=<?= $booking["id"] ?>&status=rejected"
-    class="btn btn-danger btn-sm"
->
-    Reject
-</a>
+    <a
+        href="?id=<?= $booking["id"] ?>&status=rejected"
+        class="btn btn-danger btn-sm"
+    >
+        Reject
+    </a>
 
 <?php elseif ($booking["status"] === "accepted"): ?>
 
-<a
-    href="?id=<?= $booking["id"] ?>&status=completed"
-    class="btn btn-primary btn-sm"
->
-    Complete
-</a>
+    <a
+        href="?id=<?= $booking["id"] ?>&status=completed"
+        class="btn btn-primary btn-sm"
+    >
+        Complete
+    </a>
+
+<?php else: ?>
+
+    <span class="text-muted">
+        No action
+    </span>
 
 <?php endif; ?>
 
