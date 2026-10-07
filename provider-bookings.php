@@ -5,46 +5,86 @@ require_once "config/database.php";
 session_start();
 
 if (
-    !isset($_SESSION["user_id"]) ||
-    $_SESSION["role"] !== "provider"
-) {
-    header("Location: login.php");
-    exit;
-}
-
-if (
     isset($_GET["id"]) &&
     isset($_GET["status"])
 ) {
 
     $bookingId = (int) $_GET["id"];
-    $status = $_GET["status"];
+    $newStatus = $_GET["status"];
 
-    $allowed = [
-        "accepted",
-        "rejected",
-        "completed"
-    ];
+    /*
+     * Only these status transitions are allowed:
+     *
+     * pending   -> accepted
+     * pending   -> rejected
+     * accepted  -> completed
+     */
 
-    if (in_array($status, $allowed, true)) {
+    if ($newStatus === "accepted") {
 
         $stmt = $conn->prepare("
             UPDATE bookings
             INNER JOIN services
                 ON bookings.service_id = services.id
-            SET bookings.status = ?
+            SET bookings.status = 'accepted'
             WHERE bookings.id = ?
             AND services.provider_id = ?
+            AND bookings.status = 'pending'
         ");
 
         $stmt->bind_param(
-            "sii",
-            $status,
+            "ii",
             $bookingId,
             $_SESSION["user_id"]
         );
 
         $stmt->execute();
+
+        $stmt->close();
+
+    } elseif ($newStatus === "rejected") {
+
+        $stmt = $conn->prepare("
+            UPDATE bookings
+            INNER JOIN services
+                ON bookings.service_id = services.id
+            SET bookings.status = 'rejected'
+            WHERE bookings.id = ?
+            AND services.provider_id = ?
+            AND bookings.status = 'pending'
+        ");
+
+        $stmt->bind_param(
+            "ii",
+            $bookingId,
+            $_SESSION["user_id"]
+        );
+
+        $stmt->execute();
+
+        $stmt->close();
+
+    } elseif ($newStatus === "completed") {
+
+        $stmt = $conn->prepare("
+            UPDATE bookings
+            INNER JOIN services
+                ON bookings.service_id = services.id
+            SET bookings.status = 'completed'
+            WHERE bookings.id = ?
+            AND services.provider_id = ?
+            AND bookings.status = 'accepted'
+        ");
+
+        $stmt->bind_param(
+            "ii",
+            $bookingId,
+            $_SESSION["user_id"]
+        );
+
+        $stmt->execute();
+
+        $stmt->close();
     }
 
     header("Location: provider-bookings.php");
